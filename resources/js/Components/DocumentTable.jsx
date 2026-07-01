@@ -11,7 +11,7 @@ export default function DocumentTable({ documents, linkPrefix, showSupplier = tr
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-white/10 text-gray-400 text-left">
+          <tr className="border-b border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 text-left">
             <th className="pb-3 font-medium">No. Dokumen</th>
             {showSupplier && <th className="pb-3 font-medium">Supplier</th>}
             <th className="pb-3 font-medium">Tanggal</th>
@@ -23,15 +23,15 @@ export default function DocumentTable({ documents, linkPrefix, showSupplier = tr
         </thead>
         <tbody>
           {documents.data.map(doc => (
-            <tr key={doc.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-              <td className="py-3 font-medium text-white">{doc.document_number}</td>
-              {showSupplier && <td className="py-3 text-gray-400">{doc.supplier?.company_name || '-'}</td>}
-              <td className="py-3 text-gray-400">{new Date(doc.document_date).toLocaleDateString('id-ID')}</td>
-              <td className="py-3 text-gray-400">{doc.goods_type}</td>
-              <td className="py-3 text-gray-400">{doc.currency} {Number(doc.goods_value).toLocaleString('id-ID')}</td>
+            <tr key={doc.id} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-100/50 dark:hover:bg-white/[0.02] transition-colors">
+              <td className="py-3 font-medium text-gray-900 dark:text-white">{doc.document_number}</td>
+              {showSupplier && <td className="py-3 text-gray-600 dark:text-gray-400">{doc.supplier?.company_name || '-'}</td>}
+              <td className="py-3 text-gray-600 dark:text-gray-400">{new Date(doc.document_date).toLocaleDateString('id-ID')}</td>
+              <td className="py-3 text-gray-600 dark:text-gray-400">{doc.goods_type}</td>
+              <td className="py-3 text-gray-600 dark:text-gray-400">{doc.currency} {Number(doc.goods_value).toLocaleString('id-ID')}</td>
               <td className="py-3"><StatusBadge status={doc.status} /></td>
               <td className="py-3">
-                <Link href={`${linkPrefix}/${doc.id}`} className="text-indigo-400 hover:text-indigo-300 text-sm">Detail</Link>
+                <Link href={`${linkPrefix}/${doc.id}`} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm">Detail</Link>
               </td>
             </tr>
           ))}
@@ -44,7 +44,7 @@ export default function DocumentTable({ documents, linkPrefix, showSupplier = tr
             <Link
               key={i}
               href={link.url || '#'}
-              className={`px-3 py-1 rounded text-sm ${link.active ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-white/5'} ${!link.url ? 'opacity-30 pointer-events-none' : ''}`}
+              className={`px-3 py-1 rounded text-sm transition-colors ${link.active ? 'bg-indigo-600 text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/5'} ${!link.url ? 'opacity-30 pointer-events-none' : ''}`}
               dangerouslySetInnerHTML={{ __html: link.label }}
             />
           ))}

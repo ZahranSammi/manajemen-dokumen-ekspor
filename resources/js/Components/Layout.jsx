@@ -46,6 +46,26 @@ export default function Layout({ children, title }) {
   const [notifications, setNotifications] = useState([]);
   const [showNotif, setShowNotif] = useState(false);
 
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') || 'dark';
+    }
+    return 'dark';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   const loadNotifications = async () => {
     try {
       const res = await fetch('/notifications');
@@ -55,16 +75,16 @@ export default function Layout({ children, title }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 font-sans">
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 font-sans transition-colors duration-200">
       <Head title={`${title} - Sistem Manajemen Dokumen Impor`} />
 
-      <nav className="border-b border-white/5 bg-white/[0.02]">
+      <nav className="border-b border-gray-200 dark:border-white/5 bg-white dark:bg-white/[0.02]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-8">
               <Link href="/dashboard" className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white font-bold text-sm">IM</div>
-                <span className="font-semibold text-white hidden sm:block">Dokumen Impor</span>
+                <span className="font-semibold text-gray-900 dark:text-white hidden sm:block">Dokumen Impor</span>
               </Link>
               <div className="hidden md:flex items-center gap-1">
                 {navItems.map(item => (
@@ -73,8 +93,8 @@ export default function Layout({ children, title }) {
                     href={item.href}
                     className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                       location.pathname === item.href || location.pathname.startsWith(item.href + '/')
-                        ? 'bg-white/10 text-white'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        ? 'bg-gray-200/60 text-gray-900 dark:bg-white/10 dark:text-white font-medium'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
                     }`}
                   >
                     {item.label}
@@ -83,10 +103,21 @@ export default function Layout({ children, title }) {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <button
+                onClick={toggleTheme}
+                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                title={theme === 'dark' ? 'Aktifkan Mode Terang' : 'Aktifkan Mode Gelap'}
+              >
+                {theme === 'dark' ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 12.728A9 9 0 115.636 5.636m12.728 12.728A9 9 0 015.636 5.636" /></svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                )}
+              </button>
               <div className="relative">
                 <button
                   onClick={() => { setShowNotif(!showNotif); if (!showNotif) loadNotifications(); }}
-                  className="relative p-2 text-gray-400 hover:text-white transition-colors"
+                  className="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                   {(unreadNotifications > 0) && (
@@ -94,19 +125,19 @@ export default function Layout({ children, title }) {
                   )}
                 </button>
                 {showNotif && (
-                  <div className="absolute right-0 mt-2 w-80 bg-gray-900 border border-white/10 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto">
-                    <div className="p-3 border-b border-white/10 flex justify-between items-center">
-                      <span className="text-sm font-medium">Notifikasi</span>
-                      <button onClick={() => { fetch('/notifications/read-all', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content } }); }} className="text-xs text-indigo-400 hover:text-indigo-300">Tandai semua dibaca</button>
+                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto">
+                    <div className="p-3 border-b border-gray-200 dark:border-white/10 flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">Notifikasi</span>
+                      <button onClick={() => { fetch('/notifications/read-all', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content } }); }} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Tandai semua dibaca</button>
                     </div>
                     {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500 text-sm">Tidak ada notifikasi</div>
+                      <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">Tidak ada notifikasi</div>
                     ) : (
                       notifications.map(n => (
-                        <div key={n.id} className={`p-3 border-b border-white/5 text-sm ${!n.read_at ? 'bg-indigo-500/5' : ''}`}>
-                          <div className="font-medium text-white">{n.title}</div>
-                          <div className="text-gray-400 mt-1">{n.message}</div>
-                          <div className="text-gray-600 text-xs mt-1">{new Date(n.created_at).toLocaleString('id-ID')}</div>
+                        <div key={n.id} className={`p-3 border-b border-gray-100 dark:border-white/5 text-sm ${!n.read_at ? 'bg-indigo-500/5 dark:bg-indigo-500/10' : ''}`}>
+                          <div className="font-medium text-gray-900 dark:text-white">{n.title}</div>
+                          <div className="text-gray-600 dark:text-gray-400 mt-1">{n.message}</div>
+                          <div className="text-gray-400 dark:text-gray-600 text-xs mt-1">{new Date(n.created_at).toLocaleString('id-ID')}</div>
                         </div>
                       ))
                     )}
@@ -115,10 +146,10 @@ export default function Layout({ children, title }) {
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
-                  <div className="text-sm font-medium text-white">{user.name}</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</div>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: roleColor.bg, color: roleColor.color }}>{ROLE_LABELS[user.role]}</span>
                 </div>
-                <Link href="/logout" method="post" as="button" className="px-3 py-1.5 rounded-lg border border-white/10 text-red-400 text-sm hover:bg-red-500/10 transition-colors">Keluar</Link>
+                <Link href="/logout" method="post" as="button" className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-red-500 dark:text-red-400 text-sm hover:bg-red-500/10 transition-colors">Keluar</Link>
               </div>
             </div>
           </div>
@@ -126,20 +157,20 @@ export default function Layout({ children, title }) {
       </nav>
 
       {/* Mobile Nav */}
-      <div className="md:hidden border-b border-white/5 bg-white/[0.01] overflow-x-auto">
+      <div className="md:hidden border-b border-gray-200 dark:border-white/5 bg-white dark:bg-white/[0.01] overflow-x-auto">
         <div className="flex px-4 gap-1">
           {navItems.map(item => (
-            <Link key={item.href} href={item.href} className={`px-3 py-2 text-sm whitespace-nowrap ${location.pathname === item.href ? 'text-white border-b-2 border-indigo-500' : 'text-gray-400'}`}>{item.label}</Link>
+            <Link key={item.href} href={item.href} className={`px-3 py-2 text-sm whitespace-nowrap ${location.pathname === item.href ? 'text-indigo-600 dark:text-white border-b-2 border-indigo-500 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>{item.label}</Link>
           ))}
         </div>
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {flash?.success && (
-          <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">{flash.success}</div>
+          <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-sm">{flash.success}</div>
         )}
         {flash?.error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{flash.error}</div>
+          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm">{flash.error}</div>
         )}
         {children}
       </main>
