@@ -66,27 +66,6 @@ class DocumentController extends Controller
                 ]);
 
                 AuditService::log($document->id, $user->id, 'validated', 'Dokumen disetujui oleh Manager');
-
-                $admin = User::where('role', 'admin')->first();
-                if ($admin) {
-                    $report = Report::create([
-                        'document_id' => $document->id,
-                        'created_by' => $user->id,
-                        'sent_to' => $admin->id,
-                        'report_file_path' => 'pending',
-                    ]);
-
-                    GenerateReportJob::dispatch($report->id);
-                    AuditService::log($document->id, $user->id, 'report_created', 'Laporan otomatis dibuat setelah validasi');
-
-                    $report->update(['sent_at' => now()]);
-                    AuditService::log($document->id, $user->id, 'report_sent', 'Laporan dikirim ke Admin');
-
-                    NotificationService::send($admin->id, 'Laporan Dokumen Baru', "Dokumen #{$document->document_number} telah divalidasi. Laporan dikirim untuk diarsipkan.", 'success', [
-                        'document_id' => $document->id,
-                        'report_id' => $report->id,
-                    ]);
-                }
             } else {
                 $document->update([
                     'status' => 'rejected',
