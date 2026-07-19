@@ -43,7 +43,7 @@ class DocumentPolicy
     {
         // Hanya Staff Impor yang memproses/mengisi metadata saat statusnya diproses/dibuat
         if ($user->role === 'staff_impor') {
-            return in_array($document->status, ['submitted', 'staff_processing', 'rejected']);
+            return in_array($document->status, ['submitted', 'staff_processing']);
         }
 
         return false;

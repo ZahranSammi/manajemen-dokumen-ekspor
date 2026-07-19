@@ -2,6 +2,7 @@ import React from 'react';
 import { router, Link } from '@inertiajs/react';
 import Layout from '../../Components/Layout';
 import StatusBadge from '../../Components/StatusBadge';
+import ClarificationThread from '../../Components/ClarificationThread';
 
 export default function DocumentDetail({ document }) {
   const canPrepare = document.status === 'validated';
@@ -75,6 +76,13 @@ export default function DocumentDetail({ document }) {
               </div>
             ) : <p className="text-gray-500 dark:text-gray-500 text-sm">Tidak ada file.</p>}
           </div>
+
+          {document.clarifications?.length > 0 && (
+            <div className="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-sm dark:shadow-none">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Riwayat Klarifikasi</h2>
+              <ClarificationThread clarifications={document.clarifications} />
+            </div>
+          )}
 
           {document.reports?.length > 0 && (
             <div className="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-sm dark:shadow-none">

@@ -2,10 +2,16 @@ import React, { useState } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import Layout from '../../Components/Layout';
 import StatusBadge from '../../Components/StatusBadge';
+import ClarificationThread from '../../Components/ClarificationThread';
 
 export default function DocumentDetail({ document }) {
-  const canEdit = ['submitted', 'staff_processing', 'rejected'].includes(document.status);
+  const canEdit = ['submitted', 'staff_processing'].includes(document.status);
   const canForward = document.status === 'staff_processing';
+  const canReject = ['submitted', 'staff_processing'].includes(document.status);
+
+  const [showReject, setShowReject] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejecting, setRejecting] = useState(false);
 
   const { data, setData, put, processing, errors } = useForm({
     document_number: document.document_number || '',
@@ -26,6 +32,18 @@ export default function DocumentDetail({ document }) {
     if (confirm('Teruskan dokumen ini ke Manager untuk validasi?')) {
       router.post(`/staff/documents/${document.id}/forward`);
     }
+  };
+
+  const handleReject = (e) => {
+    e.preventDefault();
+    if (!rejectReason.trim()) {
+      alert('Alasan penolakan wajib diisi.');
+      return;
+    }
+    setRejecting(true);
+    router.put(`/staff/documents/${document.id}/reject`, { reason: rejectReason }, {
+      onFinish: () => setRejecting(false),
+    });
   };
 
   const inputClass = "w-full px-4 py-2.5 rounded-xl bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors disabled:opacity-50 dark:[color-scheme:dark]";
@@ -100,9 +118,34 @@ export default function DocumentDetail({ document }) {
                     Teruskan ke Manager
                   </button>
                 )}
+                {canReject && (
+                  <button type="button" onClick={() => setShowReject(v => !v)} className="px-6 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors cursor-pointer">
+                    Tolak (Tidak Sesuai)
+                  </button>
+                )}
               </div>
             )}
           </form>
+
+          {canReject && showReject && (
+            <form onSubmit={handleReject} className="mt-6 bg-white dark:bg-white/[0.02] border border-red-500/20 rounded-2xl p-6 space-y-4 shadow-sm dark:shadow-none">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tolak Dokumen (Tidak Sesuai)</h2>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alasan Penolakan (wajib)</label>
+                <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} className={inputClass} rows={3} placeholder="Jelaskan mengapa dokumen tidak sesuai..." required />
+              </div>
+              <button type="submit" disabled={rejecting} className="px-6 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 disabled:opacity-50 transition-colors cursor-pointer">
+                {rejecting ? 'Memproses...' : 'Konfirmasi Penolakan ke Supplier'}
+              </button>
+            </form>
+          )}
+
+          {document.clarifications?.length > 0 && (
+            <div className="mt-6 bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-sm dark:shadow-none">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Riwayat Klarifikasi</h2>
+              <ClarificationThread clarifications={document.clarifications} />
+            </div>
+          )}
 
           <div className="mt-6 bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-sm dark:shadow-none">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">File Lampiran</h2>

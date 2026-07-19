@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Clarification;
 use App\Models\Document;
 use App\Models\Report;
 use App\Services\AuditService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -67,7 +69,7 @@ class DocumentController extends Controller
 
     public function show(Request $request, Document $document)
     {
-        $document->load('supplier', 'files', 'auditLogs.actor', 'reports.creator', 'currentHandler');
+        $document->load('supplier', 'files', 'auditLogs.actor', 'reports.creator', 'currentHandler', 'clarifications.creator', 'clarifications.requestedByUser', 'clarifications.answeredByUser', 'clarifications.managerRespondedByUser', 'clarifications.adminAcknowledgedByUser');
 
         if ($request->wantsJson()) {
             return response()->json(['status' => 'success', 'data' => $document]);
@@ -144,5 +146,72 @@ class DocumentController extends Controller
             'document' => $document,
             'logs' => $logs,
         ]);
+    }
+
+    public function clarifications(Request $request)
+    {
+        $clarifications = Clarification::where('status', 'awaiting_admin_ack')
+            ->with('document.supplier', 'managerRespondedByUser')
+            ->orderByDesc('manager_responded_at')
+            ->paginate(15);
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'success', 'data' => $clarifications]);
+        }
+
+        return Inertia::render('Admin/Clarifications', [
+            'clarifications' => $clarifications,
+        ]);
+    }
+
+    public function showClarification(Request $request, Clarification $clarification)
+    {
+        $clarification->load('document.supplier', 'creator', 'requestedByUser', 'answeredByUser', 'managerRespondedByUser', 'adminAcknowledgedByUser');
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'success', 'data' => $clarification]);
+        }
+
+        return Inertia::render('Admin/ClarificationDetail', [
+            'clarification' => $clarification,
+        ]);
+    }
+
+    public function acknowledgeClarification(Request $request, Clarification $clarification)
+    {
+        if ($clarification->status !== 'awaiting_admin_ack') {
+            if ($request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Klarifikasi ini tidak menunggu konfirmasi Admin.'], 422);
+            }
+            return back()->with('error', 'Klarifikasi ini tidak menunggu konfirmasi Admin.');
+        }
+
+        return DB::transaction(function () use ($request, $clarification) {
+            $user = $request->user();
+
+            $clarification->update([
+                'admin_acknowledged_by' => $user->id,
+                'admin_acknowledged_at' => now(),
+                'status' => 'resolved',
+                'resolved_at' => now(),
+            ]);
+
+            $clarification->document->update([
+                'status' => 'pending_validation',
+                'current_handler_id' => null,
+            ]);
+
+            AuditService::log($clarification->document_id, $user->id, 'clarification_acknowledged_by_admin', 'Admin menerima hasil klarifikasi, dokumen dikembalikan ke antrian validasi Manager');
+
+            NotificationService::sendToRole('manager_impor', 'Dokumen Siap Divalidasi Ulang', "Dokumen #{$clarification->document->document_number} sudah dilengkapi klarifikasi dan siap divalidasi ulang.", 'info', [
+                'document_id' => $clarification->document_id,
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Hasil klarifikasi diterima, dokumen dikembalikan ke Manager.']);
+            }
+
+            return redirect()->route('admin.clarifications')->with('success', 'Hasil klarifikasi diterima, dokumen dikembalikan ke Manager.');
+        });
     }
 }

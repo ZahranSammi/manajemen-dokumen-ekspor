@@ -14,7 +14,12 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect()->route('dashboard');
         }
-        return Inertia::render('Login');
+        
+        $users = \App\Models\User::select('id', 'name', 'email', 'role')->get();
+        
+        return Inertia::render('Login', [
+            'users' => $users
+        ]);
     }
 
     public function login(Request $request)

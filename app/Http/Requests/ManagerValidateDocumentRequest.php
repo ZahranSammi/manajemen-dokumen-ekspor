@@ -14,8 +14,8 @@ class ManagerValidateDocumentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'decision' => ['required', 'string', 'in:approve,reject'],
-            'reason' => ['required_if:decision,reject', 'nullable', 'string', 'max:2000'],
+            'decision' => ['required', 'string', 'in:approve,reject_incomplete'],
+            'reason' => ['required_if:decision,reject_incomplete', 'nullable', 'string', 'max:2000'],
         ];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ManagerValidateDocumentRequest;
+use App\Models\Clarification;
 use App\Models\Document;
 use App\Models\Report;
 use App\Jobs\GenerateReportJob;
@@ -34,7 +35,7 @@ class DocumentController extends Controller
 
     public function show(Request $request, Document $document)
     {
-        $document->load('supplier', 'files', 'auditLogs.actor', 'currentHandler');
+        $document->load('supplier', 'files', 'auditLogs.actor', 'currentHandler', 'clarifications.creator', 'clarifications.requestedByUser', 'clarifications.answeredByUser', 'clarifications.managerRespondedByUser', 'clarifications.adminAcknowledgedByUser');
 
         if ($request->wantsJson()) {
             return response()->json(['status' => 'success', 'data' => $document]);
@@ -68,14 +69,21 @@ class DocumentController extends Controller
                 AuditService::log($document->id, $user->id, 'validated', 'Dokumen disetujui oleh Manager');
             } else {
                 $document->update([
-                    'status' => 'rejected',
+                    'status' => 'rejected_incomplete',
                     'current_handler_id' => null,
-                    'rejection_reason' => $request->reason,
+                    'rejection_reason' => null,
                 ]);
 
-                AuditService::log($document->id, $user->id, 'rejected', 'Ditolak: ' . $request->reason);
+                Clarification::create([
+                    'document_id' => $document->id,
+                    'manager_note' => $request->reason,
+                    'created_by' => $user->id,
+                    'status' => 'awaiting_staff_request',
+                ]);
 
-                NotificationService::sendToRole('staff_impor', 'Dokumen Ditolak', "Dokumen #{$document->document_number} ditolak. Alasan: {$request->reason}", 'warning', [
+                AuditService::log($document->id, $user->id, 'rejected_incomplete', 'Dokumen sesuai namun tidak lengkap: ' . $request->reason);
+
+                NotificationService::sendToRole('staff_impor', 'Dokumen Tidak Lengkap', "Dokumen #{$document->document_number} sesuai namun tidak lengkap. Perlu klarifikasi ke Supplier. Catatan: {$request->reason}", 'warning', [
                     'document_id' => $document->id,
                 ]);
             }
@@ -85,6 +93,72 @@ class DocumentController extends Controller
             }
 
             return redirect()->route('manager.queue')->with('success', 'Keputusan validasi berhasil disimpan.');
+        });
+    }
+
+    public function clarificationQueue(Request $request)
+    {
+        $clarifications = Clarification::where('status', 'awaiting_manager_review')
+            ->with('document.supplier', 'requestedByUser', 'answeredByUser')
+            ->orderByDesc('staff_decided_at')
+            ->paginate(15);
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'success', 'data' => $clarifications]);
+        }
+
+        return Inertia::render('Manager/Clarifications', [
+            'clarifications' => $clarifications,
+        ]);
+    }
+
+    public function showClarification(Request $request, Clarification $clarification)
+    {
+        $clarification->load('document.supplier', 'creator', 'requestedByUser', 'answeredByUser', 'managerRespondedByUser', 'adminAcknowledgedByUser');
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'success', 'data' => $clarification]);
+        }
+
+        return Inertia::render('Manager/ClarificationDetail', [
+            'clarification' => $clarification,
+        ]);
+    }
+
+    public function answerClarification(Request $request, Clarification $clarification)
+    {
+        if ($clarification->status !== 'awaiting_manager_review') {
+            if ($request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Klarifikasi ini tidak menunggu jawaban Manager.'], 422);
+            }
+            return back()->with('error', 'Klarifikasi ini tidak menunggu jawaban Manager.');
+        }
+
+        $request->validate([
+            'manager_response' => ['required', 'string', 'max:2000'],
+        ]);
+
+        return DB::transaction(function () use ($request, $clarification) {
+            $user = $request->user();
+
+            $clarification->update([
+                'manager_response' => $request->manager_response,
+                'manager_responded_by' => $user->id,
+                'manager_responded_at' => now(),
+                'status' => 'awaiting_admin_ack',
+            ]);
+
+            AuditService::log($clarification->document_id, $user->id, 'clarification_resolved_by_manager', 'Manager menjawab klarifikasi: ' . $request->manager_response);
+
+            NotificationService::sendToRole('admin', 'Klarifikasi Menunggu Konfirmasi', "Jawaban klarifikasi dokumen #{$clarification->document->document_number} telah dijawab Manager dan menunggu konfirmasi Admin.", 'info', [
+                'document_id' => $clarification->document_id,
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => 'Jawaban klarifikasi berhasil dikirim ke Admin.']);
+            }
+
+            return redirect()->route('manager.clarifications')->with('success', 'Jawaban klarifikasi berhasil dikirim ke Admin.');
         });
     }
 

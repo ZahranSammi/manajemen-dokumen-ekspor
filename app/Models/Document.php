@@ -51,4 +51,14 @@ class Document extends Model
     {
         return $this->hasMany(AuditLog::class);
     }
+
+    public function clarifications()
+    {
+        return $this->hasMany(Clarification::class);
+    }
+
+    public function latestClarification()
+    {
+        return $this->hasOne(Clarification::class)->latestOfMany();
+    }
 }

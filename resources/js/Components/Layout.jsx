@@ -10,15 +10,18 @@ const NAV_ITEMS = {
   staff_impor: [
     { label: 'Dasbor', href: '/dashboard', icon: 'home' },
     { label: 'Inbox', href: '/staff/inbox', icon: 'inbox' },
+    { label: 'Klarifikasi', href: '/staff/clarifications', icon: 'chat' },
   ],
   manager_impor: [
     { label: 'Dasbor', href: '/dashboard', icon: 'home' },
     { label: 'Antrian Validasi', href: '/manager/queue', icon: 'clipboard-check' },
+    { label: 'Klarifikasi', href: '/manager/clarifications', icon: 'chat' },
     { label: 'Tervalidasi', href: '/manager/validated', icon: 'check' },
     { label: 'Laporan', href: '/manager/reports', icon: 'report' },
   ],
   admin: [
     { label: 'Dasbor', href: '/dashboard', icon: 'home' },
+    { label: 'Klarifikasi', href: '/admin/clarifications', icon: 'chat' },
     { label: 'Laporan Masuk', href: '/admin/reports', icon: 'report' },
     { label: 'Semua Dokumen', href: '/admin/documents', icon: 'files' },
   ],

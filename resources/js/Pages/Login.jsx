@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, Head } from '@inertiajs/react';
 
-export default function Login() {
+export default function Login({ users = [] }) {
   const { data, setData, post, processing, errors } = useForm({
     email: '',
     password: '',
@@ -337,10 +337,16 @@ export default function Login() {
         <div style={currentStyles.footer}>
           <p style={currentStyles.footerText}>Kredensial Bawaan:</p>
           <div style={currentStyles.credsList}>
-            <div><code>supplier@example.com</code> / <code>password123</code> (Supplier)</div>
-            <div><code>staff@example.com</code> / <code>password123</code> (Staff)</div>
-            <div><code>manager@example.com</code> / <code>password123</code> (Manager)</div>
-            <div><code>admin@example.com</code> / <code>password123</code> (Admin)</div>
+            {users.map((user) => (
+              <div 
+                key={user.id} 
+                style={{ cursor: 'pointer', marginBottom: '4px' }}
+                onClick={() => setData({ ...data, email: user.email, password: 'password' })}
+                title="Klik untuk mengisi otomatis"
+              >
+                <code>{user.email}</code> / <code>password</code> ({user.name} - {user.role})
+              </div>
+            ))}
           </div>
         </div>
       </div>

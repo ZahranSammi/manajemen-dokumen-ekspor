@@ -25,6 +25,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/supplier/documents', [SupplierDocumentController::class, 'store']);
             Route::get('/supplier/documents', [SupplierDocumentController::class, 'index']);
             Route::get('/supplier/documents/{document}', [SupplierDocumentController::class, 'show']);
+            Route::put('/supplier/documents/{document}/revise', [SupplierDocumentController::class, 'revise']);
+            Route::put('/supplier/clarifications/{clarification}/answer', [SupplierDocumentController::class, 'answerClarification']);
         });
 
         // Staff endpoints
@@ -33,6 +35,11 @@ Route::prefix('v1')->group(function () {
             Route::get('/staff/documents/{document}', [StaffDocumentController::class, 'show']);
             Route::put('/staff/documents/{document}/process', [StaffDocumentController::class, 'process']);
             Route::post('/staff/documents/{document}/forward', [StaffDocumentController::class, 'forward']);
+            Route::put('/staff/documents/{document}/reject', [StaffDocumentController::class, 'reject']);
+            Route::get('/staff/clarifications', [StaffDocumentController::class, 'clarifications']);
+            Route::get('/staff/clarifications/{clarification}', [StaffDocumentController::class, 'showClarification']);
+            Route::put('/staff/clarifications/{clarification}/request', [StaffDocumentController::class, 'requestClarification']);
+            Route::put('/staff/clarifications/{clarification}/skip', [StaffDocumentController::class, 'skipSupplier']);
         });
 
         // Manager endpoints
@@ -43,6 +50,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/manager/validated', [ManagerDocumentController::class, 'validated']);
             Route::post('/manager/reports', [ManagerDocumentController::class, 'createReport']);
             Route::post('/manager/reports/{report}/send', [ManagerDocumentController::class, 'sendReport']);
+            Route::get('/manager/clarifications', [ManagerDocumentController::class, 'clarificationQueue']);
+            Route::get('/manager/clarifications/{clarification}', [ManagerDocumentController::class, 'showClarification']);
+            Route::put('/manager/clarifications/{clarification}/answer', [ManagerDocumentController::class, 'answerClarification']);
         });
 
         // Admin endpoints
@@ -53,6 +63,9 @@ Route::prefix('v1')->group(function () {
             Route::put('/admin/documents/{document}/prepare', [AdminDocumentController::class, 'prepare']);
             Route::put('/admin/documents/{document}/archive', [AdminDocumentController::class, 'archive']);
             Route::get('/documents/{document}/audit-log', [AdminDocumentController::class, 'auditLog']);
+            Route::get('/admin/clarifications', [AdminDocumentController::class, 'clarifications']);
+            Route::get('/admin/clarifications/{clarification}', [AdminDocumentController::class, 'showClarification']);
+            Route::put('/admin/clarifications/{clarification}/acknowledge', [AdminDocumentController::class, 'acknowledgeClarification']);
         });
 
         // Audit log - accessible by Admin and Manager

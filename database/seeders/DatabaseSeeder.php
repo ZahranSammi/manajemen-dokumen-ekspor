@@ -16,9 +16,9 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Create Supplier User & Profile
         $supplierUser = User::create([
-            'name' => 'John Supplier',
+            'name' => 'Supplier',
             'email' => 'supplier@example.com',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('password'),
             'role' => 'supplier',
         ]);
 
@@ -31,25 +31,25 @@ class DatabaseSeeder extends Seeder
 
         // 2. Create Staff Impor User
         User::create([
-            'name' => 'Sarah Staff',
+            'name' => 'Staff Impor',
             'email' => 'staff@example.com',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('password'),
             'role' => 'staff_impor',
         ]);
 
         // 3. Create Manager Impor User
         User::create([
-            'name' => 'Michael Manager',
+            'name' => 'Manager Impor',
             'email' => 'manager@example.com',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('password'),
             'role' => 'manager_impor',
         ]);
 
         // 4. Create Admin User
         User::create([
-            'name' => 'Alice Admin',
+            'name' => 'Admin',
             'email' => 'admin@example.com',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
     }

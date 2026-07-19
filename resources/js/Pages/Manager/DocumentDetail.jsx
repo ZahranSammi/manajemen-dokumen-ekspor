@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 import Layout from '../../Components/Layout';
 import StatusBadge from '../../Components/StatusBadge';
+import ClarificationThread from '../../Components/ClarificationThread';
 
 export default function DocumentDetail({ document }) {
   const canValidate = document.status === 'pending_validation';
@@ -11,8 +12,8 @@ export default function DocumentDetail({ document }) {
 
   const handleValidate = (e) => {
     e.preventDefault();
-    if (decision === 'reject' && !reason.trim()) {
-      alert('Alasan penolakan wajib diisi.');
+    if (decision === 'reject_incomplete' && !reason.trim()) {
+      alert('Catatan ketidaklengkapan wajib diisi.');
       return;
     }
     setProcessing(true);
@@ -60,21 +61,28 @@ export default function DocumentDetail({ document }) {
             <form onSubmit={handleValidate} className="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-2xl p-6 space-y-4 shadow-sm dark:shadow-none">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Keputusan Validasi</h2>
               <div className="flex gap-3">
-                <button type="button" onClick={() => setDecision('approve')} className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${decision === 'approve' ? 'bg-green-600 text-white' : 'bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10'}`}>Setujui</button>
-                <button type="button" onClick={() => setDecision('reject')} className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${decision === 'reject' ? 'bg-red-600 text-white' : 'bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10'}`}>Tolak</button>
+                <button type="button" onClick={() => setDecision('approve')} className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${decision === 'approve' ? 'bg-green-600 text-white' : 'bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10'}`}>Setujui (Lengkap)</button>
+                <button type="button" onClick={() => setDecision('reject_incomplete')} className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors cursor-pointer ${decision === 'reject_incomplete' ? 'bg-red-600 text-white' : 'bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10'}`}>Tolak (Tidak Lengkap)</button>
               </div>
-              {decision === 'reject' && (
+              {decision === 'reject_incomplete' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alasan Penolakan (wajib)</label>
-                  <textarea value={reason} onChange={e => setReason(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-red-500 outline-none" rows={3} placeholder="Jelaskan alasan penolakan..." required />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan Ketidaklengkapan (wajib)</label>
+                  <textarea value={reason} onChange={e => setReason(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-red-500 outline-none" rows={3} placeholder="Jelaskan apa yang kurang lengkap pada dokumen ini..." required />
                 </div>
               )}
               {decision && (
                 <button type="submit" disabled={processing} className={`w-full py-3 rounded-xl font-medium transition-colors disabled:opacity-50 cursor-pointer ${decision === 'approve' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'}`}>
-                  {processing ? 'Memproses...' : decision === 'approve' ? 'Konfirmasi Persetujuan' : 'Konfirmasi Penolakan'}
+                  {processing ? 'Memproses...' : decision === 'approve' ? 'Konfirmasi Persetujuan' : 'Kirim untuk Klarifikasi'}
                 </button>
               )}
             </form>
+          )}
+
+          {document.clarifications?.length > 0 && (
+            <div className="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-sm dark:shadow-none">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Riwayat Klarifikasi</h2>
+              <ClarificationThread clarifications={document.clarifications} />
+            </div>
           )}
         </div>
 

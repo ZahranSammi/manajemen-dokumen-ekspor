@@ -32,6 +32,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/documents/create', [SupplierDocumentController::class, 'create'])->name('documents.create');
         Route::post('/documents', [SupplierDocumentController::class, 'store'])->name('documents.store');
         Route::get('/documents/{document}', [SupplierDocumentController::class, 'show'])->name('documents.show');
+        Route::put('/documents/{document}/revise', [SupplierDocumentController::class, 'revise'])->name('documents.revise');
+        Route::put('/clarifications/{clarification}/answer', [SupplierDocumentController::class, 'answerClarification'])->name('clarifications.answer');
     });
 
     // Staff Impor routes
@@ -40,6 +42,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/documents/{document}', [StaffDocumentController::class, 'show'])->name('documents.show');
         Route::put('/documents/{document}/process', [StaffDocumentController::class, 'process'])->name('documents.process');
         Route::post('/documents/{document}/forward', [StaffDocumentController::class, 'forward'])->name('documents.forward');
+        Route::put('/documents/{document}/reject', [StaffDocumentController::class, 'reject'])->name('documents.reject');
+        Route::get('/clarifications', [StaffDocumentController::class, 'clarifications'])->name('clarifications');
+        Route::get('/clarifications/{clarification}', [StaffDocumentController::class, 'showClarification'])->name('clarifications.show');
+        Route::put('/clarifications/{clarification}/request', [StaffDocumentController::class, 'requestClarification'])->name('clarifications.request');
+        Route::put('/clarifications/{clarification}/skip', [StaffDocumentController::class, 'skipSupplier'])->name('clarifications.skip');
     });
 
     // Manager Impor routes
@@ -51,6 +58,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports', [ManagerDocumentController::class, 'reports'])->name('reports');
         Route::post('/reports', [ManagerDocumentController::class, 'createReport'])->name('reports.create');
         Route::post('/reports/{report}/send', [ManagerDocumentController::class, 'sendReport'])->name('reports.send');
+        Route::get('/clarifications', [ManagerDocumentController::class, 'clarificationQueue'])->name('clarifications');
+        Route::get('/clarifications/{clarification}', [ManagerDocumentController::class, 'showClarification'])->name('clarifications.show');
+        Route::put('/clarifications/{clarification}/answer', [ManagerDocumentController::class, 'answerClarification'])->name('clarifications.answer');
     });
 
     // Admin routes
@@ -61,5 +71,8 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/documents/{document}/prepare', [AdminDocumentController::class, 'prepare'])->name('documents.prepare');
         Route::put('/documents/{document}/archive', [AdminDocumentController::class, 'archive'])->name('documents.archive');
         Route::get('/documents/{document}/audit-log', [AdminDocumentController::class, 'auditLog'])->name('documents.auditLog');
+        Route::get('/clarifications', [AdminDocumentController::class, 'clarifications'])->name('clarifications');
+        Route::get('/clarifications/{clarification}', [AdminDocumentController::class, 'showClarification'])->name('clarifications.show');
+        Route::put('/clarifications/{clarification}/acknowledge', [AdminDocumentController::class, 'acknowledgeClarification'])->name('clarifications.acknowledge');
     });
 });
